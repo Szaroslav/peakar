@@ -3,7 +3,9 @@ import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from "react-nat
 import * as Location from "expo-location";
 import { getElevations, getElevation } from "@/services/elevationApi";
 import { generateNearbyPoints } from "@/utils/generatePoints";
-import { MapPoint } from "@/models/map";
+import { calculateVisibilityLineOfSight } from "@/utils/markVisible";
+import { LatLng, MapPoint } from "@/models/map";
+import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 const { width, height } = Dimensions.get("window");
 const POINT_SIZE = 12;
 
@@ -30,6 +32,7 @@ export default function ElevationMap() {
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
           elevation: await getElevation(loc.coords.latitude, loc.coords.longitude),
+          isVisible: true,
         };
         setCurrentLocation(current);
         console.log("Current location with elevation:", current);
@@ -43,16 +46,25 @@ export default function ElevationMap() {
           }
         );
         // Example other points around user
-        const otherPointsCoords: MapPoint[] = generateNearbyPoints(current, heading).map((p) => ({
+        let otherPointsCoords: MapPoint[][] = generateNearbyPoints(current, heading).map(arc => arc.map(p => ({
           latitude: p.latitude,
-          longitude: p.longitude,
+          longitude: p.longitude, 
           elevation: 0,
-        }));
+          isVisible: false,
+        })));
         console.log("Other points coords:", otherPointsCoords);
 
         // Fetch elevations
-        const elevations = await getElevations(otherPointsCoords);
-        setPoints(elevations);
+        const elevation = await getElevations(otherPointsCoords.flat());
+        console.log("Elevation coords:", elevation);
+        let index = 0;
+        for (let arc = 0; arc < otherPointsCoords.length; arc++) {
+          for (let i = 0; i < otherPointsCoords[arc].length; i++) {
+            otherPointsCoords[arc][i] = elevation[index++];
+          }
+        }
+        otherPointsCoords = calculateVisibilityLineOfSight(current, 1.5, otherPointsCoords); // assuming user height 1.5m
+        setPoints(otherPointsCoords.flat());
       } catch (err: any) {
         setError(err.message || "Unexpected error");
       } finally {
@@ -79,7 +91,7 @@ export default function ElevationMap() {
   }
 
   const normalize = (lat: number, lng: number) => {
-    const scaling_factor = 100000;
+    const scaling_factor = 10000;
     if (!currentLocation) return { x: 0, y: 0 };
     const dx = (lng - currentLocation.longitude) * scaling_factor;
     const dy = (lat - currentLocation.latitude) * scaling_factor;
@@ -93,7 +105,7 @@ export default function ElevationMap() {
         return (
           <View key={i} style={{ position: "absolute", left: x, top: y, alignItems: "center" }}>
             <View style={[styles.point, { backgroundColor: p.isVisible ? "green" : "orange" }]} />
-            <Text style={styles.elevationText}>{Math.round(p.elevation)} m</Text>
+            <Text style={styles.elevationText}>{Math.round(p.elevation ?? -1)} m</Text>
           </View>
         );
       })}

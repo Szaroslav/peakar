@@ -11,12 +11,11 @@ import { LatLng } from "@/models/map";
 export function generateNearbyPoints(
   center: LatLng,
   heading: number = 0,
-  maxPoints: number = 20,
-  maxDistance: number = 100,
+  maxPoints: number = 100,
+  maxDistance: number = 5000,
   angle: number = 180
-): LatLng[] {
-  const points: LatLng[] = [];
-
+): LatLng[][] {
+  const arcs: LatLng[][] = [];
   const metersPerDegreeLat = 111320;
   const metersPerDegreeLng = (lat: number) => {
     const R = 6371000;
@@ -36,6 +35,7 @@ export function generateNearbyPoints(
 
     const startAngle = heading - angle / 2;
     const step = pointsInArc > 1 ? angle / (pointsInArc - 1) : 0;
+    const arcPoints: LatLng[] = [];
 
     for (let i = 0; i < pointsInArc; i++) {
       const pointAngle = startAngle + step * i;
@@ -43,12 +43,13 @@ export function generateNearbyPoints(
       const deltaLat = (radius * Math.cos(rad)) / metersPerDegreeLat;
       const deltaLng = (radius * Math.sin(rad)) / metersPerDegreeLng(center.latitude);
 
-      points.push({
+      arcPoints.push({
         latitude: center.latitude + deltaLat,
         longitude: center.longitude + deltaLng,
       });
     }
+    arcs.push(arcPoints);
   }
 
-  return points;
+  return arcs;
 }
