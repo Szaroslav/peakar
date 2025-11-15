@@ -92,7 +92,7 @@ export default function ElevationMap() {
         const { x, y } = normalize(p.latitude, p.longitude);
         return (
           <View key={i} style={{ position: "absolute", left: x, top: y, alignItems: "center" }}>
-            <View style={[styles.point, { backgroundColor: "green" }]} />
+            <View style={[styles.point, { backgroundColor: p.isVisible ? "green" : "orange" }]} />
             <Text style={styles.elevationText}>{Math.round(p.elevation)} m</Text>
           </View>
         );
