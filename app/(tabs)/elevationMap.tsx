@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import * as Location from "expo-location";
 import { getElevations, getElevation } from "@/services/elevationApi";
-
+import { generateNearbyPoints } from "@/utils/generatePoints";
+import { MapPoint } from "@/models/map";
 const { width, height } = Dimensions.get("window");
 const POINT_SIZE = 12;
 
 export default function ElevationMap() {
   const [loading, setLoading] = useState(true);
-  const [points, setPoints] = useState<{ latitude: number; longitude: number; elevation: number }[]>([]);
-  const [currentLocation, setCurrentLocation] = useState<{ latitude: number; longitude: number; elevation?: number } | null>(null);
+  const [points, setPoints] = useState<MapPoint[]>([]);
+  const [currentLocation, setCurrentLocation] = useState<MapPoint | null>(null);
+  const [heading, setHeading] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,17 +26,29 @@ export default function ElevationMap() {
 
         // Get current location
         const loc = await Location.getCurrentPositionAsync({});
-        const current = { latitude: loc.coords.latitude, longitude: loc.coords.longitude, elevation: 0 };
-        current.elevation = await getElevation(current.latitude, current.longitude);
+        const current: MapPoint = {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+          elevation: await getElevation(loc.coords.latitude, loc.coords.longitude),
+        };
         setCurrentLocation(current);
-
+        console.log("Current location with elevation:", current);
+        Location.getHeadingAsync().then(
+          function (headingData) {
+            setHeading(headingData.trueHeading);
+            console.log("Heading:", headingData.trueHeading);
+          },
+          function (error) {
+            console.log("Heading error:", error);
+          }
+        );
         // Example other points around user
-        const otherPointsCoords = [
-          { latitude: loc.coords.latitude + 0.006, longitude: loc.coords.longitude + 0.001 },
-          { latitude: loc.coords.latitude - 0.001, longitude: loc.coords.longitude - 0.001 },
-          { latitude: loc.coords.latitude + 0.002, longitude: loc.coords.longitude - 0.001 },
-          { latitude: loc.coords.latitude - 0.002, longitude: loc.coords.longitude + 0.002 },
-        ];
+        const otherPointsCoords: MapPoint[] = generateNearbyPoints(current, heading).map((p) => ({
+          latitude: p.latitude,
+          longitude: p.longitude,
+          elevation: 0,
+        }));
+        console.log("Other points coords:", otherPointsCoords);
 
         // Fetch elevations
         const elevations = await getElevations(otherPointsCoords);
@@ -64,9 +78,8 @@ export default function ElevationMap() {
     );
   }
 
-  // Normalize lat/lng to screen coordinates
   const normalize = (lat: number, lng: number) => {
-    const scaling_factor = 100000;
+    const scaling_factor = 10000;
     if (!currentLocation) return { x: 0, y: 0 };
     const dx = (lng - currentLocation.longitude) * scaling_factor;
     const dy = (lat - currentLocation.latitude) * scaling_factor;
