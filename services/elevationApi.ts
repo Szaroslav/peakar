@@ -1,28 +1,45 @@
 import { ElevationResponse } from "../models/elevation";
 
-const BASE_URL = "https://api.open-elevation.com/api/v1";
+const BASE_URL = "https://api.open-elevation.com/api/v1/lookup";
 
+// Fetch elevation for one location
 export async function getElevation(lat: number, lng: number): Promise<number> {
-  const url = `${BASE_URL}/lookups?locations=${lat},${lng}`;
+  const body = {
+    locations: [{ latitude: lat, longitude: lng }],
+  };
 
-  const response = await fetch(url);
+  const response = await fetch(BASE_URL, {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch elevation");
-  }
+  if (!response.ok) throw new Error("Failed to fetch elevation");
 
   const data: ElevationResponse = await response.json();
   return data.results[0].elevation;
 }
 
-export async function getElevationPath(points: { latitude: number; longitude: number }[]) {
-  const locations = points
-    .map((p) => `${p.latitude},${p.longitude}`)
-    .join("|");
+// Fetch elevation for many locations
+export async function getElevations(
+  points: { latitude: number; longitude: number }[]
+) {
+  const body = {
+    locations: points,
+  };
 
-  const url = `${BASE_URL}/lookups?locations=${locations}`;
+  const response = await fetch(BASE_URL, {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
 
-  const response = await fetch(url);
   if (!response.ok) throw new Error("Failed to fetch elevation");
 
   const data: ElevationResponse = await response.json();

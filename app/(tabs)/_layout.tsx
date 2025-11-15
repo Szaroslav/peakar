@@ -34,9 +34,16 @@ export default function TabLayout() {
         name="camera"
         options={{
           title: 'Camera',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="camera" color={color} />,
         }}
       />
+        <Tabs.Screen
+          name="elevationMap"
+          options={{
+            title: 'Elevation Map',
+            tabBarIcon: ({ color }) => <IconSymbol size={28} name="map" color={color} />,
+          }}
+        />
     </Tabs>
   );
 }
