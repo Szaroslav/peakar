@@ -1,4 +1,4 @@
-import { LatLng, MapPoint } from "@/models/map";
+import { MapPoint } from "@/models/map";
 
 /**
  * Calculate visibility from center, interpolating along lines to each point
@@ -19,10 +19,16 @@ export function calculateVisibilityLineOfSight(
     return Math.sqrt((a.latitude - b.latitude) ** 2 + (a.longitude - b.longitude) ** 2);
   }
 
-  const getLinearFunction = (pointA: MapPoint, pointB: MapPoint) => {
-    let a = (pointB.latitude - pointA.latitude) / (pointB.longitude - pointA.longitude);
+  type LinearFunction = { vertical: true; x: number } | { vertical: false; a: number; b: number };
+
+  const getLinearFunction = (pointA: MapPoint, pointB: MapPoint): LinearFunction => {
+    const dx = pointB.longitude - pointA.longitude;
+    if (dx === 0) {
+      return {vertical: true, x: pointA.longitude };
+    }
+    let a = (pointB.latitude - pointA.latitude) / dx;
     let b = pointA.latitude - a * pointA.longitude;
-    return [a, b];
+    return {vertical: false, a, b};
   }
 
   const interpolateElevation = (
@@ -31,23 +37,42 @@ export function calculateVisibilityLineOfSight(
     c: MapPoint,
     d: MapPoint,
   ): MapPoint => {
-    const [a1, b1] = getLinearFunction(a, b);
-    const [a2, b2] = getLinearFunction(c, d);
-    const x = (b2 - b1) / (a1 - a2);
-    const y = a1 * x + b1;
-    const t = (x - a.longitude) / (b.longitude - a.longitude)
+    const lf1  = getLinearFunction(a, b);
+    const lf2  = getLinearFunction(c, d);
+
+    let x: number;
+    let y: number;
+    if (lf1.vertical) {
+      x = lf1.x;
+      if (lf2.vertical) throw new Error("Both lines vertical.");
+      y = lf2.a * x + lf2.b;
+    } else if (lf2.vertical) {
+      x = lf2.x;
+      y = lf1.a * x + lf1.b;
+    } else {
+      const { a: a1, b: b1 } = lf1;
+      const { a: a2, b: b2 } = lf2;
+
+      if (a1 === a2) throw new Error("Parallel lines — no intersection.");
+
+      x = (b2 - b1) / (a1 - a2);
+      y = a1 * x + b1;
+    }
+    const result = { latitude: y, longitude: x, elevation: 0, isVisible: false };
+    let abDistance = distance(a, b);
+    let aResultDistance = distance(a, result);
+    let t: number = abDistance === 0 ? 0 : aResultDistance / abDistance;
     const elevation = a.elevation + t * (b.elevation - a.elevation)
-    const result: MapPoint = { longitude: x, latitude: y, elevation: elevation, isVisible: false };
+    result.elevation = elevation;
     return result;
   }
 
-  const shadows = (    
+  const shadows = (
     middle: MapPoint,
     dest: MapPoint,
     center: MapPoint,
     height: number = 0
   ): boolean => {
-    const x1 = 0;
     const x2 = distance(center, dest);
     const b = center.elevation + height;
     const a = (dest.elevation - b) / x2;
@@ -55,32 +80,55 @@ export function calculateVisibilityLineOfSight(
     return a*distanceToMiddle + b < middle.elevation;
   };
 
+  const findNearestPoints = (
+    point: MapPoint,
+    arcs: MapPoint[]
+  ): [MapPoint, MapPoint] => {
+    if (arcs.length === 0) {
+      throw new Error("No points in arcs");
+    }
+
+    let nearest: MapPoint | null = null;
+    let secondNearest: MapPoint | null = null;
+    let nearestDist = Infinity;
+    let secondNearestDist = Infinity;
+
+    for (const p of arcs) {
+      const d = distance(point, p);
+
+      if (d < nearestDist) {
+        secondNearest = nearest;
+        secondNearestDist = nearestDist;
+        nearest = p;
+        nearestDist = d;
+      } else if (d < secondNearestDist) {
+        secondNearest = p;
+        secondNearestDist = d;
+      }
+    }
+
+    if (!secondNearest) {
+      secondNearest = nearest!;
+    }
+
+    return [nearest!, secondNearest!];
+  };
+
   result[0].forEach(p => p.isVisible = true);
   for (let arcIndex = 1; arcIndex < result.length; arcIndex++) {
     let visibleCount = 0;
     for (let p of result[arcIndex]) {
-        let skip = false
         for (let innerArc = 0; innerArc < arcIndex; innerArc++) {
-            const sorted = [...result[innerArc]].sort(
-                (a, b) => distance(p, a) - distance(p, b)
-            );
-            const pointA = sorted[0];
-            const pointB = sorted[1] ?? sorted[0];
-            if (!pointA.isVisible && !pointB.isVisible){
-                skip = true;
-                p.isVisible = false;
-                continue;
-            }
+            const [pointA, pointB] = findNearestPoints(p, result[innerArc]);
             let interpolatedPoint = interpolateElevation(pointA, pointB, p, center); 
             if (!shadows(interpolatedPoint, p, center, userHeight)) {
                 visibleCount++;
                 p.isVisible = true
             } else {
                 p.isVisible = false;
-                skip = true;
+                break
             }
         }
-        if (skip) continue;
     }
     if (visibleCount === 0) break;
   }

@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Dimensions, ActivityIndicator, Platform } from "react-native";
 import * as Location from "expo-location";
 import { getElevations, getElevation } from "@/services/elevationApi";
 import { generateNearbyPoints } from "@/utils/generatePoints";
 import { calculateVisibilityLineOfSight } from "@/utils/markVisible";
-import { LatLng, MapPoint } from "@/models/map";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
+import { MapPoint } from "@/models/map";
 const { width, height } = Dimensions.get("window");
 const POINT_SIZE = 12;
 
@@ -36,17 +35,23 @@ export default function ElevationMap() {
         };
         setCurrentLocation(current);
         console.log("Current location with elevation:", current);
-        Location.getHeadingAsync().then(
-          function (headingData) {
+        const fetchHeading = async () => {
+          if (Platform.OS === "web") {
+            return 0;
+          }
+          try {
+            const headingData = await Location.getHeadingAsync();
             setHeading(headingData.trueHeading);
             console.log("Heading:", headingData.trueHeading);
-          },
-          function (error) {
+            return headingData.trueHeading;
+          } catch (error) {
             console.log("Heading error:", error);
+            return 0;
           }
-        );
-        // Example other points around user
-        let otherPointsCoords: MapPoint[][] = generateNearbyPoints(current, heading).map(arc => arc.map(p => ({
+        };
+
+        const headingValue = await fetchHeading();
+        let otherPointsCoords: MapPoint[][] = generateNearbyPoints(current, headingValue).map(arc => arc.map(p => ({
           latitude: p.latitude,
           longitude: p.longitude, 
           elevation: 0,
