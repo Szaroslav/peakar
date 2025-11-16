@@ -13,7 +13,7 @@ export function generateNearbyPoints(
   heading: number = 0,
   maxPoints: number = 100,
   maxDistance: number = 5000,
-  angle: number = 180
+  angle: number = 180,
 ): LatLng[][] {
   const arcs: LatLng[][] = [];
   const metersPerDegreeLat = 111320;
@@ -41,7 +41,8 @@ export function generateNearbyPoints(
       const pointAngle = startAngle + step * i;
       const rad = (pointAngle * Math.PI) / 180;
       const deltaLat = (radius * Math.cos(rad)) / metersPerDegreeLat;
-      const deltaLng = (radius * Math.sin(rad)) / metersPerDegreeLng(center.latitude);
+      const deltaLng =
+        (radius * Math.sin(rad)) / metersPerDegreeLng(center.latitude);
 
       arcPoints.push({
         latitude: center.latitude + deltaLat,

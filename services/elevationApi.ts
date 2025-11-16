@@ -11,7 +11,7 @@ export async function getElevation(lat: number, lng: number): Promise<number> {
   const response = await fetch(BASE_URL, {
     method: "POST",
     headers: {
-      "Accept": "application/json",
+      Accept: "application/json",
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),
@@ -24,9 +24,7 @@ export async function getElevation(lat: number, lng: number): Promise<number> {
 }
 
 // Fetch elevation for many locations
-export async function getElevations(
-  points: LatLng[]
-): Promise<MapPoint[]> {
+export async function getElevations(points: LatLng[]): Promise<MapPoint[]> {
   const body = {
     locations: points,
   };
@@ -34,7 +32,7 @@ export async function getElevations(
   const response = await fetch(BASE_URL, {
     method: "POST",
     headers: {
-      "Accept": "application/json",
+      Accept: "application/json",
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),

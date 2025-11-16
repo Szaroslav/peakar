@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Dimensions, ActivityIndicator, Platform } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ActivityIndicator,
+  Platform,
+} from "react-native";
 import * as Location from "expo-location";
 import { getElevations, getElevation } from "@/services/elevationApi";
 import { generateNearbyPoints } from "@/utils/generatePoints";
@@ -30,7 +37,10 @@ export default function ElevationMap() {
         const current: MapPoint = {
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
-          elevation: await getElevation(loc.coords.latitude, loc.coords.longitude),
+          elevation: await getElevation(
+            loc.coords.latitude,
+            loc.coords.longitude,
+          ),
           isVisible: true,
         };
         setCurrentLocation(current);
@@ -51,12 +61,17 @@ export default function ElevationMap() {
         };
 
         const headingValue = await fetchHeading();
-        let otherPointsCoords: MapPoint[][] = generateNearbyPoints(current, headingValue).map(arc => arc.map(p => ({
-          latitude: p.latitude,
-          longitude: p.longitude, 
-          elevation: 0,
-          isVisible: false,
-        })));
+        let otherPointsCoords: MapPoint[][] = generateNearbyPoints(
+          current,
+          headingValue,
+        ).map((arc) =>
+          arc.map((p) => ({
+            latitude: p.latitude,
+            longitude: p.longitude,
+            elevation: 0,
+            isVisible: false,
+          })),
+        );
         console.log("Other points coords:", otherPointsCoords);
 
         // Fetch elevations
@@ -68,7 +83,11 @@ export default function ElevationMap() {
             otherPointsCoords[arc][i] = elevation[index++];
           }
         }
-        otherPointsCoords = calculateVisibilityLineOfSight(current, 1.5, otherPointsCoords); // assuming user height 1.5m
+        otherPointsCoords = calculateVisibilityLineOfSight(
+          current,
+          1.5,
+          otherPointsCoords,
+        ); // assuming user height 1.5m
         setPoints(otherPointsCoords.flat());
       } catch (err: any) {
         setError(err.message || "Unexpected error");
@@ -108,18 +127,42 @@ export default function ElevationMap() {
       {points.map((p, i) => {
         const { x, y } = normalize(p.latitude, p.longitude);
         return (
-          <View key={i} style={{ position: "absolute", left: x, top: y, alignItems: "center" }}>
-            <View style={[styles.point, { backgroundColor: p.isVisible ? "green" : "orange" }]} />
-            <Text style={styles.elevationText}>{Math.round(p.elevation ?? -1)} m</Text>
+          <View
+            key={i}
+            style={{
+              position: "absolute",
+              left: x,
+              top: y,
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={[
+                styles.point,
+                { backgroundColor: p.isVisible ? "green" : "orange" },
+              ]}
+            />
+            <Text style={styles.elevationText}>
+              {Math.round(p.elevation ?? -1)} m
+            </Text>
           </View>
         );
       })}
 
       {currentLocation && (
-        <View style={{ position: "absolute", left: width / 2, top: height / 2, alignItems: "center" }}>
+        <View
+          style={{
+            position: "absolute",
+            left: width / 2,
+            top: height / 2,
+            alignItems: "center",
+          }}
+        >
           <View style={[styles.point, { backgroundColor: "red" }]} />
           {currentLocation.elevation !== undefined && (
-            <Text style={styles.elevationText}>{Math.round(currentLocation.elevation)} m</Text>
+            <Text style={styles.elevationText}>
+              {Math.round(currentLocation.elevation)} m
+            </Text>
           )}
         </View>
       )}
