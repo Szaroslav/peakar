@@ -1,17 +1,15 @@
+import { MapPoint } from "@/models/map";
+import { getElevation, getElevations } from "@/services/elevationApi";
+import { generate2dGrid } from "@/utils/generate2dGrid";
+import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
   ActivityIndicator,
-  Platform,
+  Dimensions,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import * as Location from "expo-location";
-import { getElevations, getElevation } from "@/services/elevationApi";
-import { generateNearbyPoints } from "@/utils/generatePoints";
-import { calculateVisibilityLineOfSight } from "@/utils/markVisible";
-import { MapPoint } from "@/models/map";
 const { width, height } = Dimensions.get("window");
 const POINT_SIZE = 12;
 
@@ -19,7 +17,6 @@ export default function ElevationMap() {
   const [loading, setLoading] = useState(true);
   const [points, setPoints] = useState<MapPoint[]>([]);
   const [currentLocation, setCurrentLocation] = useState<MapPoint | null>(null);
-  const [heading, setHeading] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -45,50 +42,22 @@ export default function ElevationMap() {
         };
         setCurrentLocation(current);
         console.log("Current location with elevation:", current);
-        const fetchHeading = async () => {
-          if (Platform.OS === "web") {
-            return 0;
-          }
-          try {
-            const headingData = await Location.getHeadingAsync();
-            setHeading(headingData.trueHeading);
-            console.log("Heading:", headingData.trueHeading);
-            return headingData.trueHeading;
-          } catch (error) {
-            console.log("Heading error:", error);
-            return 0;
-          }
-        };
 
-        const headingValue = await fetchHeading();
-        let otherPointsCoords: MapPoint[][] = generateNearbyPoints(
-          current,
-          headingValue,
-        ).map((arc) =>
-          arc.map((p) => ({
-            latitude: p.latitude,
-            longitude: p.longitude,
-            elevation: 0,
-            isVisible: false,
-          })),
+        const coordGrid = generate2dGrid(
+          { latitude: current.latitude, longitude: current.longitude },
+          { radius: 50000, nPoints: 50 },
         );
-        console.log("Other points coords:", otherPointsCoords);
+        console.log("Grid of points:", coordGrid);
 
         // Fetch elevations
-        const elevation = await getElevations(otherPointsCoords.flat());
-        console.log("Elevation coords:", elevation);
-        let index = 0;
-        for (let arc = 0; arc < otherPointsCoords.length; arc++) {
-          for (let i = 0; i < otherPointsCoords[arc].length; i++) {
-            otherPointsCoords[arc][i] = elevation[index++];
-          }
-        }
-        otherPointsCoords = calculateVisibilityLineOfSight(
-          current,
-          1.5,
-          otherPointsCoords,
-        ); // assuming user height 1.5m
-        setPoints(otherPointsCoords.flat());
+        const elevations = await getElevations(coordGrid);
+        console.log("Elevation coords:", elevations);
+
+        const mapPointGrid: MapPoint[] = elevations.map((e) => ({
+          ...e,
+          isVisible: true,
+        }));
+        setPoints(mapPointGrid);
       } catch (err: any) {
         setError(err.message || "Unexpected error");
       } finally {

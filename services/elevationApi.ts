@@ -1,8 +1,10 @@
-import { ElevationResponse, LatLng, MapPoint } from "../models/map";
+import { ElevationResponse, LatLng } from "@/models/map";
 
 const BASE_URL = "https://api.open-elevation.com/api/v1/lookup";
 
-async function fetchElevationData(locations: LatLng[]): Promise<ElevationResponse> {
+async function fetchElevationData(
+  locations: LatLng[],
+): Promise<ElevationResponse> {
   const body = { locations };
 
   const response = await fetch(BASE_URL, {
@@ -26,7 +28,7 @@ export async function getElevation(lat: number, lng: number): Promise<number> {
 }
 
 // Fetch elevation for many locations
-export async function getElevations(points: LatLng[]): Promise<MapPoint[]> {
+export async function getElevations(points: LatLng[]) {
   const data = await fetchElevationData(points);
   return data.results;
 }

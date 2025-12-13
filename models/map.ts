@@ -6,5 +6,5 @@ export interface MapPoint extends LatLng {
 }
 
 export interface ElevationResponse {
-  results: MapPoint[];
+  results: Pick<MapPoint, "latitude" | "longitude" | "elevation">[];
 }
