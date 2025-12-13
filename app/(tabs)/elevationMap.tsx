@@ -45,7 +45,7 @@ export default function ElevationMap() {
 
         const coordGrid = generate2dGrid(
           { latitude: current.latitude, longitude: current.longitude },
-          { radius: 50000, nPoints: 50 },
+          { size: 50000, density: 50 },
         );
         console.log("Grid of points:", coordGrid);
 
