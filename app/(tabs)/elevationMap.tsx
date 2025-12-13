@@ -43,14 +43,13 @@ export default function ElevationMap() {
         setCurrentLocation(current);
         console.log("Current location with elevation:", current);
 
-        const coordGrid = generate2dGrid(
+        const coords = generate2dGrid(
           { latitude: current.latitude, longitude: current.longitude },
           { size: 50000, density: 50 },
         );
-        console.log("Grid of points:", coordGrid);
 
         // Fetch elevations
-        const elevations = await getElevations(coordGrid);
+        const elevations = await getElevations(coords);
         console.log("Elevation coords:", elevations);
 
         const mapPointGrid: MapPoint[] = elevations.map((e) => ({

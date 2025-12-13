@@ -6,12 +6,12 @@ import { pointGrid } from "@turf/point-grid";
 import { LatLng } from "@/models/map";
 
 /**
- * Generate a 2D grid of geographical points around a center point.
+ * Generate a flat 2D grid of geographical points around a center point.
  * @param center - center point
  * @param opts - optional options
  * @param opts.size - optional size of the grid in meters (default: 10000)
  * @param opts.density - optional number of points along one side (default: 50)
- * @returns grid of geographical points
+ * @returns flat grid of geographical points
  */
 export function generate2dGrid(
   center: LatLng,
