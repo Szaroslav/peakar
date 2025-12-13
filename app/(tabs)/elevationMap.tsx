@@ -1,25 +1,25 @@
+import * as Location from "expo-location";
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
   ActivityIndicator,
-  Platform,
+  Dimensions,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
-import * as Location from "expo-location";
-import { getElevations, getElevation } from "@/services/elevationApi";
-import { generateNearbyPoints } from "@/utils/generatePoints";
-import { calculateVisibilityLineOfSight } from "@/utils/markVisible";
-import { MapPoint } from "@/models/map";
+
+import { MapPoint, Peak } from "@/models/map";
+import { getElevation } from "@/services/elevationApi";
+import { getPeaksInArea } from "@/services/openStreetMapApi";
+
 const { width, height } = Dimensions.get("window");
+const NEARBY_PEAKS_RADIUS = 25000;
 const POINT_SIZE = 12;
 
 export default function ElevationMap() {
   const [loading, setLoading] = useState(true);
-  const [points, setPoints] = useState<MapPoint[]>([]);
+  const [peaks, setPeaks] = useState<Peak[]>([]);
   const [currentLocation, setCurrentLocation] = useState<MapPoint | null>(null);
-  const [heading, setHeading] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,54 +41,14 @@ export default function ElevationMap() {
             loc.coords.latitude,
             loc.coords.longitude,
           ),
-          isVisible: true,
         };
         setCurrentLocation(current);
         console.log("Current location with elevation:", current);
-        const fetchHeading = async () => {
-          if (Platform.OS === "web") {
-            return 0;
-          }
-          try {
-            const headingData = await Location.getHeadingAsync();
-            setHeading(headingData.trueHeading);
-            console.log("Heading:", headingData.trueHeading);
-            return headingData.trueHeading;
-          } catch (error) {
-            console.log("Heading error:", error);
-            return 0;
-          }
-        };
 
-        const headingValue = await fetchHeading();
-        let otherPointsCoords: MapPoint[][] = generateNearbyPoints(
-          current,
-          headingValue,
-        ).map((arc) =>
-          arc.map((p) => ({
-            latitude: p.latitude,
-            longitude: p.longitude,
-            elevation: 0,
-            isVisible: false,
-          })),
-        );
-        console.log("Other points coords:", otherPointsCoords);
+        const nearbyPeaks = await getPeaksInArea(current, NEARBY_PEAKS_RADIUS);
+        console.log("Nearby peaks:", nearbyPeaks);
 
-        // Fetch elevations
-        const elevation = await getElevations(otherPointsCoords.flat());
-        console.log("Elevation coords:", elevation);
-        let index = 0;
-        for (let arc = 0; arc < otherPointsCoords.length; arc++) {
-          for (let i = 0; i < otherPointsCoords[arc].length; i++) {
-            otherPointsCoords[arc][i] = elevation[index++];
-          }
-        }
-        otherPointsCoords = calculateVisibilityLineOfSight(
-          current,
-          1.5,
-          otherPointsCoords,
-        ); // assuming user height 1.5m
-        setPoints(otherPointsCoords.flat());
+        setPeaks(nearbyPeaks);
       } catch (err: any) {
         setError(err.message || "Unexpected error");
       } finally {
@@ -124,7 +84,7 @@ export default function ElevationMap() {
 
   return (
     <View style={styles.container}>
-      {points.map((p, i) => {
+      {peaks.map((p, i) => {
         const { x, y } = normalize(p.latitude, p.longitude);
         return (
           <View
@@ -136,14 +96,10 @@ export default function ElevationMap() {
               alignItems: "center",
             }}
           >
-            <View
-              style={[
-                styles.point,
-                { backgroundColor: p.isVisible ? "green" : "orange" },
-              ]}
-            />
-            <Text style={styles.elevationText}>
-              {Math.round(p.elevation ?? -1)} m
+            <View style={[styles.point, { backgroundColor: "blue" }]} />
+            <Text style={styles.mapPointName}>{p.name}</Text>
+            <Text style={styles.mapPointElevation}>
+              {Math.round(p.elevation)} m
             </Text>
           </View>
         );
@@ -158,9 +114,10 @@ export default function ElevationMap() {
             alignItems: "center",
           }}
         >
-          <View style={[styles.point, { backgroundColor: "red" }]} />
+          <View style={[styles.point, { backgroundColor: "green" }]} />
+          <Text style={styles.mapPointName}>You</Text>
           {currentLocation.elevation !== undefined && (
-            <Text style={styles.elevationText}>
+            <Text style={styles.mapPointElevation}>
               {Math.round(currentLocation.elevation)} m
             </Text>
           )}
@@ -186,9 +143,14 @@ const styles = StyleSheet.create({
     height: POINT_SIZE,
     borderRadius: POINT_SIZE / 2,
   },
-  elevationText: {
+  mapPointName: {
     color: "white",
+    fontSize: 14,
+    fontWeight: "bold",
+    marginTop: 4,
+  },
+  mapPointElevation: {
+    color: "#ececec",
     fontSize: 12,
-    marginTop: 2,
   },
 });
