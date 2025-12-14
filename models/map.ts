@@ -8,6 +8,10 @@ export interface Peak extends MapPoint {
   name: string;
 }
 
+export interface RenderablePeak extends Peak {
+  isVisible: boolean;
+}
+
 export interface ElevationResponse {
   results: MapPoint[];
 }

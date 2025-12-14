@@ -20,6 +20,7 @@
     "@turf/buffer": "^7.3.1",
     "@turf/distance": "^7.3.1",
     "@turf/helpers": "^7.3.1",
+    "@turf/line-chunk": "^7.3.1",
     "expo": "~54.0.23",
     "expo-camera": "~17.0.9",
     "expo-constants": "~18.0.10",
