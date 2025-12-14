@@ -8,17 +8,20 @@ import {
   View,
 } from "react-native";
 
-import { MapPoint, Peak } from "@/models/map";
+import { MapPoint, RenderablePeak } from "@/models/map";
 import { getElevation } from "@/services/elevationApi";
 import { getPeaksInArea } from "@/services/openStreetMapApi";
+import { transformToRenderablePeaks } from "@/utils/transformToRenderablePeaks";
 
 const { width, height } = Dimensions.get("window");
+const OBSERVER_HEIGHT = 1.6;
+const LINE_SEGMENT_LENGTH = 250;
 const NEARBY_PEAKS_RADIUS = 25000;
 const POINT_SIZE = 12;
 
 export default function ElevationMap() {
   const [loading, setLoading] = useState(true);
-  const [peaks, setPeaks] = useState<Peak[]>([]);
+  const [peaks, setPeaks] = useState<RenderablePeak[]>([]);
   const [currentLocation, setCurrentLocation] = useState<MapPoint | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +51,15 @@ export default function ElevationMap() {
         const nearbyPeaks = await getPeaksInArea(current, NEARBY_PEAKS_RADIUS);
         console.log("Nearby peaks:", nearbyPeaks);
 
-        setPeaks(nearbyPeaks);
+        const renderablePeaks = await transformToRenderablePeaks(
+          current,
+          nearbyPeaks,
+          {
+            observerHeight: OBSERVER_HEIGHT,
+            lineSegmentLength: LINE_SEGMENT_LENGTH,
+          },
+        );
+        setPeaks(renderablePeaks);
       } catch (err: any) {
         setError(err.message || "Unexpected error");
       } finally {
@@ -94,9 +105,15 @@ export default function ElevationMap() {
               left: x,
               top: y,
               alignItems: "center",
+              opacity: p.isVisible ? 1.0 : 0.5,
             }}
           >
-            <View style={[styles.point, { backgroundColor: "blue" }]} />
+            <View
+              style={[
+                styles.point,
+                { backgroundColor: p.isVisible ? "#3a71fb" : "#485066" },
+              ]}
+            />
             <Text style={styles.mapPointName}>{p.name}</Text>
             <Text style={styles.mapPointElevation}>
               {Math.round(p.elevation)} m
