@@ -75,12 +75,6 @@ export default function App() {
         </View>
 
       </CameraView>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-          <Text style={styles.text}>Flip Camera</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -131,15 +125,6 @@ const styles = StyleSheet.create({
   subText: {
     color: '#ddd',
     fontSize: 10,
-  },
-  buttonContainer: {
-    position: "absolute",
-    bottom: 64,
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    width: "100%",
-    paddingHorizontal: 64,
-    zIndex: 2,
   },
   button: {
     flex: 1,

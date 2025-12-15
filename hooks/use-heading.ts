@@ -17,6 +17,7 @@ export const useHeading = () => {
 
       subscription = await Location.watchHeadingAsync((obj) => {
         const { trueHeading, magHeading } = obj;
+        console.log(`Heading update - True: ${trueHeading}, Magnetic: ${magHeading}`);
         if (trueHeading !== -1) {
           setHeading(trueHeading);
         } else {

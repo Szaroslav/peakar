@@ -31,7 +31,7 @@ export default function ElevationMap() {
   }
 
   const normalize = (lat: number, lng: number) => {
-    const scaling_factor = 10000;
+    const scaling_factor = 5000;
     if (!currentLocation) return { x: 0, y: 0 };
     const dx = (lng - currentLocation.longitude) * scaling_factor;
     const dy = (lat - currentLocation.latitude) * scaling_factor;
