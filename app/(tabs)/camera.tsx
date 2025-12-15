@@ -5,10 +5,9 @@ import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
 import { useHeading } from "@/hooks/use-heading";
 import { getBearingDifference } from "@/utils/helpers";
 import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
+import { CAMERA_VIEW_ANGLE } from "@/constants/config";
 
 const { width, height } = Dimensions.get("window");
-const CAMERA_VIEW_ANGLE = 60;
-
 export default function App() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
