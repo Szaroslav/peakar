@@ -12,6 +12,11 @@ export interface RenderablePeak extends Peak {
   isVisible: boolean;
 }
 
+export interface CameraPoint extends RenderablePeak {
+  x: number;
+  y: number;
+}
+
 export interface ElevationResponse {
   results: MapPoint[];
 }
