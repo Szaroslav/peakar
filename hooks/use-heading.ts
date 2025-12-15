@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import * as Location from 'expo-location';
-import { Platform } from 'react-native';
+import { useState, useEffect } from "react";
+import * as Location from "expo-location";
+import { Platform } from "react-native";
 
 export const useHeading = () => {
   const [heading, setHeading] = useState(0);
@@ -10,14 +10,16 @@ export const useHeading = () => {
 
     const startWatching = async () => {
       if (Platform.OS === "web") {
-        return
+        return;
       }
       const { status } = await Location.getForegroundPermissionsAsync();
-      if (status !== 'granted') return;
+      if (status !== "granted") return;
 
       subscription = await Location.watchHeadingAsync((obj) => {
         const { trueHeading, magHeading } = obj;
-        console.log(`Heading update - True: ${trueHeading}, Magnetic: ${magHeading}`);
+        console.log(
+          `Heading update - True: ${trueHeading}, Magnetic: ${magHeading}`,
+        );
         if (trueHeading !== -1) {
           setHeading(trueHeading);
         } else {

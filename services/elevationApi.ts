@@ -2,7 +2,9 @@ import { ElevationResponse, LatLng, MapPoint } from "../models/map";
 
 const BASE_URL = "https://api.open-elevation.com/api/v1/lookup";
 
-async function fetchElevationData(locations: LatLng[]): Promise<ElevationResponse> {
+async function fetchElevationData(
+  locations: LatLng[],
+): Promise<ElevationResponse> {
   const body = { locations };
 
   const response = await fetch(BASE_URL, {

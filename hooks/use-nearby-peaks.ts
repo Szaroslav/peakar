@@ -29,14 +29,14 @@ export const useNearbyPeaks = () => {
         const loc = await Location.getCurrentPositionAsync({});
         const elevation = await getElevation(
           loc.coords.latitude,
-          loc.coords.longitude
+          loc.coords.longitude,
         );
         const current: MapPoint = {
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
           elevation: elevation,
         };
-        
+
         setCurrentLocation(current);
         console.log("Current location with elevation:", current);
 
@@ -51,7 +51,7 @@ export const useNearbyPeaks = () => {
             lineSegmentLength: LINE_SEGMENT_LENGTH,
           },
         );
-        
+
         setPeaks(renderablePeaks);
       } catch (err: any) {
         setError(err.message || "Unexpected error");

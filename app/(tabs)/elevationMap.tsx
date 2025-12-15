@@ -19,42 +19,42 @@ export default function ElevationMap() {
   const { peaks, currentLocation, loading, error } = useNearbyPeaks();
   const heading = useHeading();
   const normalize = (lat: number, lng: number) => {
-      const scaling_factor = 5000;
-      if (!currentLocation) return { x: 0, y: 0 };
-      const latRad = (currentLocation.latitude * Math.PI) / 180;
-      const correctionX = Math.cos(latRad);
-      const dx = (lng - currentLocation.longitude) * scaling_factor * correctionX;
-      const dy = (lat - currentLocation.latitude) * scaling_factor;
-      return { x: width / 2 + dx, y: height / 2 - dy };
-    };
+    const scaling_factor = 5000;
+    if (!currentLocation) return { x: 0, y: 0 };
+    const latRad = (currentLocation.latitude * Math.PI) / 180;
+    const correctionX = Math.cos(latRad);
+    const dx = (lng - currentLocation.longitude) * scaling_factor * correctionX;
+    const dy = (lat - currentLocation.latitude) * scaling_factor;
+    return { x: width / 2 + dx, y: height / 2 - dy };
+  };
   const renderFOV = useMemo(() => {
-      if (!currentLocation) return null;
+    if (!currentLocation) return null;
 
-      const cx = width / 2;
-      const cy = height / 2;
-      const r = Math.max(width, height) * 1.5;
-      const halfAngle = CAMERA_VIEW_ANGLE / 2;
-      const angleLeftRad = toRad(heading - halfAngle);
-      const angleRightRad = toRad(heading + halfAngle);
+    const cx = width / 2;
+    const cy = height / 2;
+    const r = Math.max(width, height) * 1.5;
+    const halfAngle = CAMERA_VIEW_ANGLE / 2;
+    const angleLeftRad = toRad(heading - halfAngle);
+    const angleRightRad = toRad(heading + halfAngle);
 
-      const x1 = cx + r * Math.sin(angleLeftRad);
-      const y1 = cy - r * Math.cos(angleLeftRad);
-      const x2 = cx + r * Math.sin(angleRightRad);
-      const y2 = cy - r * Math.cos(angleRightRad);
+    const x1 = cx + r * Math.sin(angleLeftRad);
+    const y1 = cy - r * Math.cos(angleLeftRad);
+    const x2 = cx + r * Math.sin(angleRightRad);
+    const y2 = cy - r * Math.cos(angleRightRad);
 
-      const points = `${cx},${cy} ${x1},${y1} ${x2},${y2}`;
+    const points = `${cx},${cy} ${x1},${y1} ${x2},${y2}`;
 
-      return (
-        <Svg height={height} width={width} style={StyleSheet.absoluteFill}>
-          <Polygon
-            points={points}
-            fill="rgba(255, 255, 255, 0.15)"
-            stroke="rgba(255, 255, 255, 0.3)"
-            strokeWidth={1}
-          />
-        </Svg>
-      );
-    }, [heading, width, height, currentLocation]);
+    return (
+      <Svg height={height} width={width} style={StyleSheet.absoluteFill}>
+        <Polygon
+          points={points}
+          fill="rgba(255, 255, 255, 0.15)"
+          stroke="rgba(255, 255, 255, 0.3)"
+          strokeWidth={1}
+        />
+      </Svg>
+    );
+  }, [heading, width, height, currentLocation]);
   const renderedPeaks = useMemo(() => {
     return peaks.map((p, i) => {
       const { x, y } = normalize(p.latitude, p.longitude);
@@ -119,16 +119,16 @@ export default function ElevationMap() {
             marginTop: -50,
             width: 100,
             height: 100,
-            justifyContent: 'center'
+            justifyContent: "center",
           }}
         >
           <View style={[styles.point, { backgroundColor: "green" }]} />
-            <Text style={styles.mapPointName}>You</Text>
-            {currentLocation.elevation !== undefined && (
-              <Text style={styles.mapPointElevation}>
-                {Math.round(currentLocation.elevation)} m
-              </Text>
-            )}
+          <Text style={styles.mapPointName}>You</Text>
+          {currentLocation.elevation !== undefined && (
+            <Text style={styles.mapPointElevation}>
+              {Math.round(currentLocation.elevation)} m
+            </Text>
+          )}
         </View>
       )}
     </View>
