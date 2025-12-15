@@ -19,12 +19,12 @@ export default function ElevationMap() {
   const { peaks, currentLocation, loading, error } = useNearbyPeaks();
   const heading = useHeading();
   const normalize = (lat: number, lng: number) => {
-    const scaling_factor = 5000;
+    const scalingFactor = 5000;
     if (!currentLocation) return { x: 0, y: 0 };
     const latRad = (currentLocation.latitude * Math.PI) / 180;
     const correctionX = Math.cos(latRad);
-    const dx = (lng - currentLocation.longitude) * scaling_factor * correctionX;
-    const dy = (lat - currentLocation.latitude) * scaling_factor;
+    const dx = (lng - currentLocation.longitude) * scalingFactor * correctionX;
+    const dy = (lat - currentLocation.latitude) * scalingFactor;
     return { x: width / 2 + dx, y: height / 2 - dy };
   };
   const renderFOV = useMemo(() => {

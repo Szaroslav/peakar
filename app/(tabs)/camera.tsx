@@ -65,11 +65,14 @@ export default function App() {
           getBearingDifference(location, heading, peak) <=
             CAMERA_VIEW_ANGLE / 2,
       )
-      .map((peak, index, array) => ({
-        ...peak,
-        x: (width / array.length) * index + width / (array.length * 2),
-        y: height / 2 + (index % 2 === 0 ? -30 : 30),
-      }));
+      .map((peak, index) => {
+        const bearingDiff = getBearingDifference(location, heading, peak);
+        const x = ((bearingDiff + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * width;
+        return {
+          ...peak,
+          x,
+          y: height / 2 + (index % 2 === 0 ? -30 : 30),
+        }});
   }
   if (loading) {
     return (
