@@ -2,22 +2,27 @@ import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { useEffect, useState } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View, Dimensions } from "react-native";
 import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
-import { CameraPoint, RenderablePeak } from "@/models/map";
+import { useHeading } from "@/hooks/use-heading";
+import { getBearingDifference } from "@/utils/helpers";
+import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
 
 const { width, height } = Dimensions.get("window");
+const CAMERA_VIEW_ANGLE = 60;
 
 export default function App() {
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [points, setPoints] = useState<CameraPoint[]>([]);
   const { peaks, currentLocation, loading, error } = useNearbyPeaks();
+  const heading = useHeading();
+
   useEffect(() => {
     if (peaks.length > 0) {
-      const mappedPoints = mapPeaksToCameraPoints(peaks);
+      const mappedPoints = mapPeaksToCameraPoints(currentLocation, heading, peaks);
       setPoints(mappedPoints);
     }
-  }, [peaks]);
-  
+  }, [peaks, currentLocation, heading]);
+
   if (!permission) {
     // Camera permissions are still loading.
     return <View />;
@@ -38,10 +43,12 @@ export default function App() {
     setFacing((current) => (current === "back" ? "front" : "back"));
   }
 
-  function mapPeaksToCameraPoints(peaks: RenderablePeak[]): CameraPoint[] {
-    return peaks.map((peak, index) => ({
+  function mapPeaksToCameraPoints(location: MapPoint | null, heading: number, peaks: RenderablePeak[]): CameraPoint[] {
+    return peaks
+      .filter((peak) => peak.isVisible && getBearingDifference(location, heading, peak) <= CAMERA_VIEW_ANGLE / 2)
+      .map((peak, index, array) => ({   
         ...peak,
-        x: (width / peaks.length) * index + (width / (peaks.length * 2)),
+        x: (width / array.length) * index + (width / (array.length * 2)),
         y: (height / 2) + (index % 2 === 0 ? -30 : 30),
       }));
   }

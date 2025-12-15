@@ -7,7 +7,7 @@ import { transformToRenderablePeaks } from "@/utils/transformToRenderablePeaks";
 
 const OBSERVER_HEIGHT = 1.6;
 const LINE_SEGMENT_LENGTH = 250;
-const NEARBY_PEAKS_RADIUS = 25000;
+const NEARBY_PEAKS_RADIUS = 7000;
 
 export const useNearbyPeaks = () => {
   const [loading, setLoading] = useState(true);
