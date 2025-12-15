@@ -1,1 +1,1 @@
-export const CAMERA_VIEW_ANGLE = 60;
+export const CAMERA_VIEW_ANGLE = 70;

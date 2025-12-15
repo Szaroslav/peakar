@@ -10,7 +10,7 @@ export const useHeading = () => {
 
     const startWatching = async () => {
       if (Platform.OS === "web") {
-        return 0;
+        return
       }
       const { status } = await Location.getForegroundPermissionsAsync();
       if (status !== 'granted') return;

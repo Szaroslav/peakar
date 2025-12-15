@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
 import { useEffect, useState } from "react";
-import { Button, StyleSheet, Text, TouchableOpacity, View, Dimensions } from "react-native";
+import { Button, StyleSheet, Text, View, Dimensions, ActivityIndicator,} from "react-native";
 import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
 import { useHeading } from "@/hooks/use-heading";
 import { getBearingDifference } from "@/utils/helpers";
@@ -51,7 +51,22 @@ export default function App() {
         y: (height / 2) + (index % 2 === 0 ? -30 : 30),
       }));
   }
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="white" />
+        <Text style={{ color: "white" }}>Loading points…</Text>
+      </View>
+    );
+  }
 
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text style={{ color: "red" }}>{error}</Text>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing={facing}>
@@ -89,6 +104,12 @@ const styles = StyleSheet.create({
   },
   camera: {
     flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "black",
   },
   arOverlay: {
     ...StyleSheet.absoluteFillObject,
