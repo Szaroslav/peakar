@@ -67,12 +67,14 @@ export default function App() {
       )
       .map((peak, index) => {
         const bearingDiff = getBearingDifference(location, heading, peak);
-        const x = ((bearingDiff + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * width;
+        const x =
+          ((bearingDiff + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * width;
         return {
           ...peak,
           x,
           y: height / 2 + (index % 2 === 0 ? -30 : 30),
-        }});
+        };
+      });
   }
   if (loading) {
     return (
