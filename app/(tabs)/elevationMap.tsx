@@ -19,15 +19,7 @@ const POINT_SIZE = 12;
 export default function ElevationMap() {
   const { peaks, currentLocation, loading, error, refetch } = useNearbyPeaks();
   const heading = useHeading();
-  const normalize = (lat: number, lng: number) => {
-    const scalingFactor = 5000;
-    if (!currentLocation) return { x: 0, y: 0 };
-    const latRad = (currentLocation.latitude * Math.PI) / 180;
-    const correctionX = Math.cos(latRad);
-    const dx = (lng - currentLocation.longitude) * scalingFactor * correctionX;
-    const dy = (lat - currentLocation.latitude) * scalingFactor;
-    return { x: width / 2 + dx, y: height / 2 - dy };
-  };
+
   const renderFOV = useMemo(() => {
     if (!currentLocation) return null;
 
@@ -55,9 +47,20 @@ export default function ElevationMap() {
         />
       </Svg>
     );
-  }, [heading, peaks]);
+  }, [heading, currentLocation]);
   const renderedPeaks = useMemo(() => {
     return peaks.map((p, i) => {
+      const normalize = (lat: number, lng: number) => {
+        const scalingFactor = 5000;
+        if (!currentLocation) return { x: 0, y: 0 };
+        const latRad = (currentLocation.latitude * Math.PI) / 180;
+        const correctionX = Math.cos(latRad);
+        const dx =
+          (lng - currentLocation.longitude) * scalingFactor * correctionX;
+        const dy = (lat - currentLocation.latitude) * scalingFactor;
+        return { x: width / 2 + dx, y: height / 2 - dy };
+      };
+
       const { x, y } = normalize(p.latitude, p.longitude);
       return (
         <View
@@ -85,7 +88,7 @@ export default function ElevationMap() {
         </View>
       );
     });
-  }, [peaks]);
+  }, [peaks, currentLocation]);
 
   if (loading) {
     return (
