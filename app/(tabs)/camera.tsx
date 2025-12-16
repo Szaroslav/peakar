@@ -88,8 +88,8 @@ export default function App() {
       <View style={styles.center}>
         <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>
         <View style={styles.controls}>
-          <TouchableOpacity 
-            style={styles.iconButton} 
+          <TouchableOpacity
+            style={styles.iconButton}
             onPress={refetch}
             activeOpacity={0.7}
           >
@@ -101,13 +101,12 @@ export default function App() {
   }
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={"back"}>
-      </CameraView>
+      <CameraView style={styles.camera} facing={"back"}></CameraView>
       <View style={styles.controls}>
-        <TouchableOpacity 
-        style={styles.iconButton} 
-        onPress={refetch}
-        activeOpacity={0.7}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={refetch}
+          activeOpacity={0.7}
         >
           <Ionicons name="refresh" size={24} color="white" />
         </TouchableOpacity>
@@ -119,7 +118,7 @@ export default function App() {
             key={index}
             style={[styles.pointMarker, { left: point.x, top: point.y }]}
           >
-          <View style={styles.dot} />
+            <View style={styles.dot} />
             <View style={styles.labelContainer}>
               <Text style={styles.labelText}>{point.name}</Text>
               <Text style={styles.subText}>{point.elevation} m</Text>
@@ -154,10 +153,10 @@ const styles = StyleSheet.create({
     top: 50,
     right: 20,
     zIndex: 10,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   iconButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0,0,0,0.5)",
     padding: 10,
     borderRadius: 25,
     marginLeft: 10,

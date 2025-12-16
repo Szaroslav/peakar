@@ -18,7 +18,7 @@ export const useNearbyPeaks = () => {
   const fetchPeaks = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
@@ -66,11 +66,11 @@ export const useNearbyPeaks = () => {
     fetchPeaks();
   }, [fetchPeaks]);
 
-  return { 
-    peaks, 
-    currentLocation, 
-    loading, 
-    error, 
-    refetch: fetchPeaks
+  return {
+    peaks,
+    currentLocation,
+    loading,
+    error,
+    refetch: fetchPeaks,
   };
 };

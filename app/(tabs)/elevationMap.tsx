@@ -1,18 +1,18 @@
+import { CAMERA_VIEW_ANGLE } from "@/constants/config";
+import { useHeading } from "@/hooks/use-heading";
+import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
+import { toRad } from "@/utils/helpers";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   StyleSheet,
   Text,
-  View,
   TouchableOpacity,
+  View,
 } from "react-native";
-import { Svg, Polygon } from "react-native-svg";
-import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
-import { useHeading } from "@/hooks/use-heading";
-import { CAMERA_VIEW_ANGLE } from "@/constants/config";
-import { toRad } from "@/utils/helpers";
-import { Ionicons } from "@expo/vector-icons";
+import { Polygon, Svg } from "react-native-svg";
 const { width, height } = Dimensions.get("window");
 const POINT_SIZE = 12;
 
@@ -101,8 +101,8 @@ export default function ElevationMap() {
       <View style={styles.center}>
         <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>
         <View style={styles.controls}>
-          <TouchableOpacity 
-            style={styles.iconButton} 
+          <TouchableOpacity
+            style={styles.iconButton}
             onPress={refetch}
             activeOpacity={0.7}
           >
@@ -118,10 +118,10 @@ export default function ElevationMap() {
       {renderFOV}
       {renderedPeaks}
       <View style={styles.controls}>
-        <TouchableOpacity 
-        style={styles.iconButton} 
-        onPress={refetch}
-        activeOpacity={0.7}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={refetch}
+          activeOpacity={0.7}
         >
           <Ionicons name="refresh" size={24} color="white" />
         </TouchableOpacity>
@@ -186,15 +186,15 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-    controls: {
+  controls: {
     position: "absolute",
     top: 50,
     right: 20,
     zIndex: 10,
-    flexDirection: 'row',
+    flexDirection: "row",
   },
   iconButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0,0,0,0.5)",
     padding: 10,
     borderRadius: 25,
     marginLeft: 10,
