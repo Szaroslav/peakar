@@ -55,7 +55,7 @@ export default function ElevationMap() {
         />
       </Svg>
     );
-  }, [heading]);
+  }, [heading, peaks]);
   const renderedPeaks = useMemo(() => {
     return peaks.map((p, i) => {
       const { x, y } = normalize(p.latitude, p.longitude);

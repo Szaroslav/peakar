@@ -32,7 +32,7 @@ export default function App() {
       );
       setPoints(mappedPoints);
     }
-  }, [heading]);
+  }, [heading, peaks]);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -55,6 +55,7 @@ export default function App() {
     heading: number,
     peaks: RenderablePeak[],
   ): CameraPoint[] {
+    console.log("Mapping peaks to camera points with heading:", heading);
     return peaks
       .filter(
         (peak) =>
@@ -101,31 +102,31 @@ export default function App() {
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing={"back"}>
-          <View style={styles.controls}>
-             <TouchableOpacity 
-              style={styles.iconButton} 
-              onPress={refetch}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="refresh" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.arOverlay} pointerEvents="box-none">
-            {points.map((point, index) => (
-              <View
-                key={index}
-                style={[styles.pointMarker, { left: point.x, top: point.y }]}
-              >
-              <View style={styles.dot} />
-                <View style={styles.labelContainer}>
-                  <Text style={styles.labelText}>{point.name}</Text>
-                  <Text style={styles.subText}>{point.elevation} m</Text>
-                </View>
-              </View>
-            ))}
-          </View>
       </CameraView>
+      <View style={styles.controls}>
+        <TouchableOpacity 
+        style={styles.iconButton} 
+        onPress={refetch}
+        activeOpacity={0.7}
+        >
+          <Ionicons name="refresh" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.arOverlay} pointerEvents="box-none">
+        {points.map((point, index) => (
+          <View
+            key={index}
+            style={[styles.pointMarker, { left: point.x, top: point.y }]}
+          >
+          <View style={styles.dot} />
+            <View style={styles.labelContainer}>
+              <Text style={styles.labelText}>{point.name}</Text>
+              <Text style={styles.subText}>{point.elevation} m</Text>
+            </View>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
