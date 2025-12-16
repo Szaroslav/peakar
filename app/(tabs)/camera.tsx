@@ -1,4 +1,4 @@
-import { CameraView, CameraType, useCameraPermissions } from "expo-camera";
+import { CameraView, useCameraPermissions } from "expo-camera";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -7,7 +7,9 @@ import {
   View,
   Dimensions,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
 import { useHeading } from "@/hooks/use-heading";
 import { getBearingDifference } from "@/utils/helpers";
@@ -16,10 +18,9 @@ import { CAMERA_VIEW_ANGLE } from "@/constants/config";
 
 const { width, height } = Dimensions.get("window");
 export default function App() {
-  const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
   const [points, setPoints] = useState<CameraPoint[]>([]);
-  const { peaks, currentLocation, loading, error } = useNearbyPeaks();
+  const { peaks, currentLocation, loading, error, refetch } = useNearbyPeaks();
   const heading = useHeading();
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export default function App() {
       );
       setPoints(mappedPoints);
     }
-  }, [peaks, currentLocation, heading]);
+  }, [heading]);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -47,10 +48,6 @@ export default function App() {
         <Button onPress={requestPermission} title="grant permission" />
       </View>
     );
-  }
-
-  function toggleCameraFacing() {
-    setFacing((current) => (current === "back" ? "front" : "back"));
   }
 
   function mapPeaksToCameraPoints(
@@ -88,27 +85,46 @@ export default function App() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>{error}</Text>
+        <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>
+        <View style={styles.controls}>
+          <TouchableOpacity 
+            style={styles.iconButton} 
+            onPress={refetch}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing={facing}>
-        <View style={styles.arOverlay} pointerEvents="box-none">
-          {points.map((point, index) => (
-            <View
-              key={index}
-              style={[styles.pointMarker, { left: point.x, top: point.y }]}
+      <CameraView style={styles.camera} facing={"back"}>
+          <View style={styles.controls}>
+             <TouchableOpacity 
+              style={styles.iconButton} 
+              onPress={refetch}
+              activeOpacity={0.7}
             >
+              <Ionicons name="refresh" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.arOverlay} pointerEvents="box-none">
+            {points.map((point, index) => (
+              <View
+                key={index}
+                style={[styles.pointMarker, { left: point.x, top: point.y }]}
+              >
               <View style={styles.dot} />
-              <View style={styles.labelContainer}>
-                <Text style={styles.labelText}>{point.name}</Text>
-                <Text style={styles.subText}>{point.elevation} m</Text>
+                <View style={styles.labelContainer}>
+                  <Text style={styles.labelText}>{point.name}</Text>
+                  <Text style={styles.subText}>{point.elevation} m</Text>
+                </View>
               </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
       </CameraView>
     </View>
   );
@@ -131,6 +147,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "black",
+  },
+  controls: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    flexDirection: 'row',
+  },
+  iconButton: {
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 10,
+    borderRadius: 25,
+    marginLeft: 10,
   },
   arOverlay: {
     ...StyleSheet.absoluteFillObject,
