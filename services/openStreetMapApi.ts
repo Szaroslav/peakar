@@ -58,7 +58,7 @@ export async function getPeaksInArea(
   const bounds = bbox(circleArea);
 
   const query = `
-    [out:json][timeout:25];
+    [out:json][timeout:90];
     (
       node["natural"="peak"]($area);
     );

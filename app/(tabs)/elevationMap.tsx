@@ -1,32 +1,25 @@
+import { CAMERA_VIEW_ANGLE } from "@/constants/config";
+import { useHeading } from "@/hooks/use-heading";
+import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
+import { toRad } from "@/utils/helpers";
+import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import {
   ActivityIndicator,
   Dimensions,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { Svg, Polygon } from "react-native-svg";
-import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
-import { useHeading } from "@/hooks/use-heading";
-import { CAMERA_VIEW_ANGLE } from "@/constants/config";
-import { toRad } from "@/utils/helpers";
-
+import { Polygon, Svg } from "react-native-svg";
 const { width, height } = Dimensions.get("window");
 const POINT_SIZE = 12;
 
 export default function ElevationMap() {
-  const { peaks, currentLocation, loading, error } = useNearbyPeaks();
+  const { peaks, currentLocation, loading, error, refetch } = useNearbyPeaks();
   const heading = useHeading();
-  const normalize = (lat: number, lng: number) => {
-    const scalingFactor = 5000;
-    if (!currentLocation) return { x: 0, y: 0 };
-    const latRad = (currentLocation.latitude * Math.PI) / 180;
-    const correctionX = Math.cos(latRad);
-    const dx = (lng - currentLocation.longitude) * scalingFactor * correctionX;
-    const dy = (lat - currentLocation.latitude) * scalingFactor;
-    return { x: width / 2 + dx, y: height / 2 - dy };
-  };
+
   const renderFOV = useMemo(() => {
     if (!currentLocation) return null;
 
@@ -54,9 +47,20 @@ export default function ElevationMap() {
         />
       </Svg>
     );
-  }, [heading, width, height, currentLocation]);
+  }, [heading, currentLocation]);
   const renderedPeaks = useMemo(() => {
     return peaks.map((p, i) => {
+      const normalize = (lat: number, lng: number) => {
+        const scalingFactor = 5000;
+        if (!currentLocation) return { x: 0, y: 0 };
+        const latRad = (currentLocation.latitude * Math.PI) / 180;
+        const correctionX = Math.cos(latRad);
+        const dx =
+          (lng - currentLocation.longitude) * scalingFactor * correctionX;
+        const dy = (lat - currentLocation.latitude) * scalingFactor;
+        return { x: width / 2 + dx, y: height / 2 - dy };
+      };
+
       const { x, y } = normalize(p.latitude, p.longitude);
       return (
         <View
@@ -98,7 +102,16 @@ export default function ElevationMap() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red" }}>{error}</Text>
+        <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>
+        <View style={styles.controls}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={refetch}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -107,7 +120,15 @@ export default function ElevationMap() {
     <View style={styles.container}>
       {renderFOV}
       {renderedPeaks}
-
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={refetch}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="refresh" size={24} color="white" />
+        </TouchableOpacity>
+      </View>
       {currentLocation && (
         <View
           style={{
@@ -167,5 +188,18 @@ const styles = StyleSheet.create({
     textShadowColor: "rgba(0,0,0,0.8)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
+  },
+  controls: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    flexDirection: "row",
+  },
+  iconButton: {
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 10,
+    borderRadius: 25,
+    marginLeft: 10,
   },
 });
