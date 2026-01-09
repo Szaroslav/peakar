@@ -57,16 +57,17 @@ export default function App() {
   ): CameraPoint[] {
     console.log("Mapping peaks to camera points with heading:", heading);
     return peaks
+      .map((peak) => ({
+        ...peak,
+        bearing: getBearingDifference(location, heading, peak),
+      }))
       .filter(
-        (peak) =>
-          peak.isVisible &&
-          getBearingDifference(location, heading, peak) <=
-            CAMERA_VIEW_ANGLE / 2,
+        ({ isVisible, bearing }) =>
+          isVisible && Math.abs(bearing) <= CAMERA_VIEW_ANGLE / 2,
       )
       .map((peak, index) => {
-        const bearingDiff = getBearingDifference(location, heading, peak);
         const x =
-          ((bearingDiff + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * width;
+          ((peak.bearing + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * width;
         return {
           ...peak,
           x,

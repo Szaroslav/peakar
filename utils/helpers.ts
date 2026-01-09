@@ -1,6 +1,6 @@
-import bearing from "@turf/bearing";
-import { point } from "@turf/helpers";
 import { MapPoint, RenderablePeak } from "@/models/map";
+import { bearing as bearingBetween } from "@turf/bearing";
+import { point } from "@turf/helpers";
 
 export const toRad = (deg: number) => (deg * Math.PI) / 180;
 export const toDeg = (rad: number) => (rad * 180) / Math.PI;
@@ -12,13 +12,19 @@ export function getBearingDifference(
 ): number {
   if (!location) return 0;
 
+  function mod(x: number, m: number): number {
+    return ((x % m) + m) % m;
+  }
+
   const userPoint = point([location.longitude, location.latitude]);
   const peakPoint = point([peak.longitude, peak.latitude]);
-  const rawBearing = bearing(userPoint, peakPoint);
-  let diff = rawBearing - heading;
-  const normalizedDiff = ((diff + 540) % 360) - 180;
+  const rawBearing = bearingBetween(userPoint, peakPoint);
+  const bearing = (rawBearing + 360) % 360;
+  const smallestDiff = mod(bearing - heading + 180, 360) - 180;
+
   console.log(
-    `Raw bearing to peak ${peak.name}: ${rawBearing} diff: ${diff} normalizedDiff: ${normalizedDiff}`,
+    `Raw bearing to peak ${peak.name}: ${bearing} diff: ${smallestDiff}`,
   );
-  return Math.abs(normalizedDiff);
+
+  return smallestDiff;
 }
