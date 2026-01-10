@@ -1,7 +1,3 @@
-import { CAMERA_VIEW_ANGLE } from "@/constants/config";
-import { useHeading } from "@/hooks/use-heading";
-import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
-import { toRad } from "@/utils/helpers";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import {
@@ -13,6 +9,12 @@ import {
   View,
 } from "react-native";
 import { Polygon, Svg } from "react-native-svg";
+
+import { CAMERA_VIEW_ANGLE } from "@/constants/config";
+import { useHeading } from "@/hooks/use-heading";
+import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
+import { toRad } from "@/utils/helpers";
+
 const { width, height } = Dimensions.get("window");
 const POINT_SIZE = 12;
 

@@ -1,22 +1,24 @@
+import { Ionicons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Button,
+  Dimensions,
   StyleSheet,
   Text,
-  View,
-  Dimensions,
-  ActivityIndicator,
   TouchableOpacity,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
-import { useHeading } from "@/hooks/use-heading";
-import { getBearingDifference } from "@/utils/helpers";
-import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
+
 import { CAMERA_VIEW_ANGLE } from "@/constants/config";
+import { useHeading } from "@/hooks/use-heading";
+import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
+import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
+import { getBearingDifference } from "@/utils/helpers";
 
 const { width, height } = Dimensions.get("window");
+
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
   const [points, setPoints] = useState<CameraPoint[]>([]);

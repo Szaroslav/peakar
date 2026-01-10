@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
 import * as Location from "expo-location";
+import { useEffect, useState } from "react";
 import { Platform } from "react-native";
 
 export const useHeading = () => {

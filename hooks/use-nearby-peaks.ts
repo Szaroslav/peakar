@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
 import * as Location from "expo-location";
+import { useCallback, useEffect, useState } from "react";
+
 import { MapPoint, RenderablePeak } from "@/models/map";
 import { getElevation } from "@/services/elevationApi";
 import { getPeaksInArea } from "@/services/openStreetMapApi";

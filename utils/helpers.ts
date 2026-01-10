@@ -1,6 +1,7 @@
-import { MapPoint, RenderablePeak } from "@/models/map";
 import { bearing as bearingBetween } from "@turf/bearing";
 import { point } from "@turf/helpers";
+
+import { MapPoint, RenderablePeak } from "@/models/map";
 
 export const toRad = (deg: number) => (deg * Math.PI) / 180;
 export const toDeg = (rad: number) => (rad * 180) / Math.PI;
