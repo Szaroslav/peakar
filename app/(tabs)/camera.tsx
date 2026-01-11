@@ -23,7 +23,7 @@ export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
   const [points, setPoints] = useState<CameraPoint[]>([]);
   const { peaks, currentLocation, loading, error, refetch } = useNearbyPeaks();
-  const heading = useHeading();
+  const heading = (useHeading() + 90) % 360;
 
   useEffect(() => {
     if (peaks.length > 0) {
