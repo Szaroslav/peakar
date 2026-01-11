@@ -1,107 +1,227 @@
-import { Image } from "expo-image";
-import { Link } from "expo-router";
-import { Platform, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Button,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-import { HelloWave } from "@/components/hello-wave";
-import ParallaxScrollView from "@/components/parallax-scroll-view";
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { CAMERA_VIEW_ANGLE } from "@/constants/config";
+import { useHeading } from "@/hooks/use-heading";
+import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
+import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
+import { getBearingDifference } from "@/utils/helpers";
 
-export default function HomeScreen() {
+const { width, height } = Dimensions.get("window");
+
+export default function App() {
+  const [permission, requestPermission] = useCameraPermissions();
+  const [points, setPoints] = useState<CameraPoint[]>([]);
+  const { peaks, currentLocation, loading, error, refetch } = useNearbyPeaks();
+  const heading = (useHeading() + 90) % 360;
+
+  useEffect(() => {
+    if (peaks.length > 0) {
+      const mappedPoints = mapPeaksToCameraPoints(
+        currentLocation,
+        heading,
+        peaks,
+      );
+      setPoints(mappedPoints);
+    }
+  }, [heading, peaks]);
+
+  if (!permission) {
+    // Camera permissions are still loading.
+    return <View />;
+  }
+
+  if (!permission.granted) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.message}>
+          We need your permission to show the camera
+        </Text>
+        <Button onPress={requestPermission} title="grant permission" />
+      </View>
+    );
+  }
+
+  function mapPeaksToCameraPoints(
+    location: MapPoint | null,
+    heading: number,
+    peaks: RenderablePeak[],
+  ): CameraPoint[] {
+    console.log("Mapping peaks to camera points with heading:", heading);
+    return peaks
+      .map((peak) => ({
+        ...peak,
+        bearing: getBearingDifference(location, heading, peak),
+      }))
+      .filter(
+        ({ isVisible, bearing }) =>
+          isVisible && Math.abs(bearing) <= CAMERA_VIEW_ANGLE / 2,
+      )
+      .map((peak, index) => {
+        const x =
+          ((peak.bearing + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * height;
+        return {
+          ...peak,
+          x: width / 2 + (index % 2 === 0 ? -30 : 30),
+          y: x,
+        };
+      });
+  }
+  if (loading) {
+    return (
+      <View style={[styles.center, { transform: [{ rotate: "90deg" }] }]}>
+        <ActivityIndicator size="large" color="white" />
+        <Text style={{ color: "white" }}>Loading points…</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.center}>
+        <Text
+          style={{
+            color: "red",
+            marginBottom: 10,
+            transform: [{ rotate: "90deg" }],
+          }}
+        >
+          {error}
+        </Text>
+        <View style={styles.controls}>
+          <TouchableOpacity
+            style={[styles.iconButton, { transform: [{ rotate: "90deg" }] }]}
+            onPress={refetch}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="refresh" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction
-              title="Action"
-              icon="cube"
-              onPress={() => alert("Action pressed")}
-            />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <View style={styles.container}>
+      <CameraView style={styles.camera} facing={"back"}></CameraView>
+      <View style={styles.controls}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={refetch}
+          activeOpacity={0.7}
+        >
+          <Ionicons
+            name="refresh"
+            size={24}
+            color="white"
+            style={{ transform: [{ rotate: "90deg" }] }}
+          />
+        </TouchableOpacity>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <View style={styles.arOverlay} pointerEvents="box-none">
+        {points.map((point, index) => (
+          <View
+            key={index}
+            style={[styles.pointMarker, { left: point.x, top: point.y }]}
+          >
+            <View style={styles.dot} />
+            <View style={styles.labelContainer}>
+              <Text style={styles.labelText}>{point.name}</Text>
+              <Text style={styles.subText}>
+                {Math.round(point.elevation)} m
+              </Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
+  container: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  message: {
+    textAlign: "center",
+    paddingBottom: 10,
+  },
+  camera: {
+    flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    gap: 8,
+    backgroundColor: "black",
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  controls: {
     position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
+    flexDirection: "row",
+  },
+  iconButton: {
+    backgroundColor: "rgba(0,0,0,0.5)",
+    padding: 10,
+    borderRadius: 25,
+    marginLeft: 10,
+  },
+  arOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 1,
+  },
+  pointMarker: {
+    position: "absolute",
+    alignItems: "center",
+    width: 100,
+    marginLeft: -50,
+    transform: [{ rotate: "90deg" }],
+  },
+  dot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#ff3b30",
+    borderWidth: 2,
+    borderColor: "white",
+    marginBottom: 4,
+  },
+  labelContainer: {
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  labelText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  subText: {
+    color: "#ddd",
+    fontSize: 10,
+  },
+  button: {
+    flex: 1,
+    alignItems: "center",
+  },
+  text: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
   },
 });
