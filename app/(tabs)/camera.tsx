@@ -69,17 +69,17 @@ export default function App() {
       )
       .map((peak, index) => {
         const x =
-          ((peak.bearing + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * width;
+          ((peak.bearing + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * height;
         return {
           ...peak,
-          x,
-          y: height / 2 + (index % 2 === 0 ? -30 : 30),
+          x: width / 2 + (index % 2 === 0 ? -30 : 30),
+          y: x,
         };
       });
   }
   if (loading) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { transform: [{ rotate: "90deg" }] }]}>
         <ActivityIndicator size="large" color="white" />
         <Text style={{ color: "white" }}>Loading points…</Text>
       </View>
@@ -89,10 +89,18 @@ export default function App() {
   if (error) {
     return (
       <View style={styles.center}>
-        <Text style={{ color: "red", marginBottom: 10 }}>{error}</Text>
+        <Text
+          style={{
+            color: "red",
+            marginBottom: 10,
+            transform: [{ rotate: "90deg" }],
+          }}
+        >
+          {error}
+        </Text>
         <View style={styles.controls}>
           <TouchableOpacity
-            style={styles.iconButton}
+            style={[styles.iconButton, { transform: [{ rotate: "90deg" }] }]}
             onPress={refetch}
             activeOpacity={0.7}
           >
@@ -111,7 +119,12 @@ export default function App() {
           onPress={refetch}
           activeOpacity={0.7}
         >
-          <Ionicons name="refresh" size={24} color="white" />
+          <Ionicons
+            name="refresh"
+            size={24}
+            color="white"
+            style={{ transform: [{ rotate: "90deg" }] }}
+          />
         </TouchableOpacity>
       </View>
 
@@ -173,6 +186,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 100,
     marginLeft: -50,
+    transform: [{ rotate: "90deg" }],
   },
   dot: {
     width: 12,
