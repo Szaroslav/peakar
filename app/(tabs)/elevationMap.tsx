@@ -10,9 +10,9 @@ import {
 } from "react-native";
 import { Polygon, Svg } from "react-native-svg";
 
+import { useNearbyPeaks } from "@/components/nearby-peaks-provider";
 import { CAMERA_VIEW_ANGLE } from "@/constants/config";
 import { useHeading } from "@/hooks/use-heading";
-import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
 import { toRad } from "@/utils/helpers";
 
 const { width, height } = Dimensions.get("window");
