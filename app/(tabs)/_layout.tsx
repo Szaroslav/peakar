@@ -1,13 +1,33 @@
-import { Tabs } from "expo-router";
-import React from "react";
+import { Tabs, usePathname } from "expo-router";
+import * as ScreenOrientation from "expo-screen-orientation";
+import React, { useEffect } from "react";
 
 import { HapticTab } from "@/components/haptic-tab";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useScreenOrientation } from "@/hooks/use-screen-orientation";
 
 export default function TabLayout() {
+  const { setScreenOrientationLock } = useScreenOrientation();
+  const pathname = usePathname();
   const colorScheme = useColorScheme();
+
+  useEffect(() => {
+    const lockOrientation = async () => {
+      if (pathname === "/camera") {
+        await setScreenOrientationLock(
+          ScreenOrientation.OrientationLock.LANDSCAPE_RIGHT,
+        );
+      } else {
+        await setScreenOrientationLock(
+          ScreenOrientation.OrientationLock.PORTRAIT_UP,
+        );
+      }
+    };
+
+    lockOrientation();
+  }, [pathname, setScreenOrientationLock]);
 
   return (
     <Tabs
