@@ -21,7 +21,7 @@ export function CustomTabLabel({ name, color, rotated, icon }: TabLabelProps) {
       easing: Easing.inOut(Easing.ease),
       useNativeDriver: true,
     }).start();
-  }, [rotation, rotated]);
+  }, [rotated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rotate = rotation.interpolate({
     inputRange: [0, 1],
