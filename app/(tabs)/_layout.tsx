@@ -14,7 +14,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   useEffect(() => {
-    if (pathname === "/camera") {
+    if (pathname === "/") {
       setScreenOrientation("landscape");
     } else {
       setScreenOrientation("portrait");
@@ -31,34 +31,6 @@ export default function TabLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{
-          tabBarIconStyle: { display: "none" },
-          tabBarLabel: ({ color }) => (
-            <CustomTabLabel
-              name="Home"
-              color={color}
-              rotated={screenOrientation === "landscape"}
-              icon="house.fill"
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          tabBarIconStyle: { display: "none" },
-          tabBarLabel: ({ color }) => (
-            <CustomTabLabel
-              name="Explore"
-              color={color}
-              rotated={screenOrientation === "landscape"}
-              icon="paperplane.fill"
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="camera"
         options={{
           tabBarIconStyle: { display: "none" },
           tabBarLabel: ({ color }) => (
