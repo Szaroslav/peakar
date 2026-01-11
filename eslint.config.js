@@ -9,6 +9,7 @@ module.exports = defineConfig([
     plugins: { prettier: require("eslint-plugin-prettier") },
     rules: {
       "prettier/prettier": "error",
+      "@typescript-eslint/no-redeclare": "off",
     },
   },
 ]);

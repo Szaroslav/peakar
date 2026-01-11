@@ -11,9 +11,9 @@ import {
   View,
 } from "react-native";
 
+import { useNearbyPeaks } from "@/components/nearby-peaks-provider";
 import { CAMERA_VIEW_ANGLE } from "@/constants/config";
 import { useHeading } from "@/hooks/use-heading";
-import { useNearbyPeaks } from "@/hooks/use-nearby-peaks";
 import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
 import { getBearingDifference } from "@/utils/helpers";
 
