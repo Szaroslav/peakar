@@ -137,7 +137,9 @@ export default function App() {
             <View style={styles.dot} />
             <View style={styles.labelContainer}>
               <Text style={styles.labelText}>{point.name}</Text>
-              <Text style={styles.subText}>{point.elevation} m</Text>
+              <Text style={styles.subText}>
+                {Math.round(point.elevation)} m
+              </Text>
             </View>
           </View>
         ))}
