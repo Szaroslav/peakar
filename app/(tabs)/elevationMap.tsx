@@ -1,8 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo } from "react";
+import React, { use, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
+  PanResponder,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -15,10 +16,48 @@ import { CAMERA_VIEW_ANGLE } from "@/constants/config";
 import { useHeading } from "@/hooks/use-heading";
 import { toRad } from "@/utils/helpers";
 
-const { width, height } = Dimensions.get("window");
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 5.0;
+const ZOOM_SENSITIVITY = 0.01;
 const POINT_SIZE = 12;
 
+const { width, height } = Dimensions.get("window");
+
 export default function ElevationMap() {
+  const zoomRef = useRef(1);
+  const [zoom, setZoom] = useState(1);
+  const lastZoom = useRef(zoom);
+
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+
+      onPanResponderGrant: () => {
+        console.log("PanResponder start");
+        console.log("Last zoom:", zoomRef.current);
+        lastZoom.current = zoomRef.current;
+      },
+
+      onPanResponderMove: (_, gestureState) => {
+        const nextZoom = lastZoom.current - gestureState.dy * ZOOM_SENSITIVITY;
+
+        const clampedZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, nextZoom));
+
+        zoomRef.current = clampedZoom;
+        setZoom(clampedZoom);
+      },
+
+      onPanResponderRelease: () => {
+        console.log("PanResponder end");
+      },
+    }),
+  ).current;
+
   const { peaks, currentLocation, loading, error, refetch } = useNearbyPeaks();
   const heading = useHeading();
 
@@ -27,7 +66,7 @@ export default function ElevationMap() {
 
     const cx = width / 2;
     const cy = height / 2;
-    const r = Math.max(width, height) * 1.5;
+    const r = Math.max(width, height) * 1.5 * (1.0 / zoom);
     const halfAngle = CAMERA_VIEW_ANGLE / 2;
     const angleLeftRad = toRad(heading - halfAngle);
     const angleRightRad = toRad(heading + halfAngle);
@@ -49,18 +88,25 @@ export default function ElevationMap() {
         />
       </Svg>
     );
-  }, [heading, currentLocation]);
+  }, [heading, currentLocation, zoom]);
+
   const renderedPeaks = useMemo(() => {
     return peaks.map((p, i) => {
       const normalize = (lat: number, lng: number) => {
-        const scalingFactor = 5000;
         if (!currentLocation) return { x: 0, y: 0 };
+
+        const scalingFactor = 5000 * zoom;
         const latRad = (currentLocation.latitude * Math.PI) / 180;
         const correctionX = Math.cos(latRad);
+
         const dx =
           (lng - currentLocation.longitude) * scalingFactor * correctionX;
         const dy = (lat - currentLocation.latitude) * scalingFactor;
-        return { x: width / 2 + dx, y: height / 2 - dy };
+
+        return {
+          x: width / 2 + dx,
+          y: height / 2 - dy,
+        };
       };
 
       const { x, y } = normalize(p.latitude, p.longitude);
@@ -90,7 +136,7 @@ export default function ElevationMap() {
         </View>
       );
     });
-  }, [peaks, currentLocation]);
+  }, [peaks, currentLocation, zoom]);
 
   if (loading) {
     return (
@@ -119,7 +165,7 @@ export default function ElevationMap() {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.container} {...panResponder.panHandlers}>
       {renderFOV}
       {renderedPeaks}
       <View style={styles.controls}>
