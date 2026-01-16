@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useEffect, useState } from "react";
+import { DeviceMotion } from "expo-sensors";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Button,
@@ -15,15 +16,50 @@ import { useNearbyPeaks } from "@/components/nearby-peaks-provider";
 import { CAMERA_VIEW_ANGLE } from "@/constants/config";
 import { useHeading } from "@/hooks/use-heading";
 import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
-import { getBearingDifference } from "@/utils/helpers";
+import { getBearingDifference, mod, toDeg } from "@/utils/helpers";
+
+const MIN_Y_ROTATION = 60;
+const MAX_Y_ROTATION = 135;
+const MAX_LINE_SIZE = 0.5;
+const halfYRotationDiff = (MAX_Y_ROTATION - MIN_Y_ROTATION) / 2;
 
 const { width, height } = Dimensions.get("window");
 
 export default function App() {
-  const [permission, requestPermission] = useCameraPermissions();
+  const rotY = useRef<number>(0);
+  const [lineSize, setLineSize] = useState<number>(0);
+  const [renderPeaks, setRenderPeaks] = useState<boolean>(true);
   const [points, setPoints] = useState<CameraPoint[]>([]);
+
+  const [permission, requestPermission] = useCameraPermissions();
   const { peaks, currentLocation, loading, error, refetch } = useNearbyPeaks();
   const heading = (useHeading() + 90) % 360;
+
+  useEffect(() => {
+    const subscription = DeviceMotion.addListener(({ rotation }) => {
+      const y = toDeg(Math.PI + rotation.gamma);
+      if (Math.abs(y - rotY.current) > 0.05) {
+        rotY.current = y;
+
+        const rotatedY = mod(y - (MIN_Y_ROTATION + halfYRotationDiff), 360);
+        const angleWithYAxis = Math.min(rotatedY, 360 - rotatedY);
+
+        setLineSize(
+          angleWithYAxis <= halfYRotationDiff
+            ? 0
+            : ((angleWithYAxis - halfYRotationDiff) /
+                (180 - halfYRotationDiff)) *
+                MAX_LINE_SIZE,
+        );
+
+        setRenderPeaks(angleWithYAxis <= halfYRotationDiff);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (peaks.length > 0) {
@@ -113,6 +149,15 @@ export default function App() {
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing={"back"}></CameraView>
+      <View
+        style={[
+          styles.invalidYRotationIndicator,
+          {
+            width: Math.round(width * lineSize),
+            left: Math.round(width * ((1.0 - lineSize) / 2)),
+          },
+        ]}
+      />
       <View style={styles.controls}>
         <TouchableOpacity
           style={styles.iconButton}
@@ -128,22 +173,30 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.arOverlay} pointerEvents="box-none">
-        {points.map((point, index) => (
-          <View
-            key={index}
-            style={[styles.pointMarker, { left: point.x, top: point.y }]}
-          >
-            <View style={styles.dot} />
-            <View style={styles.labelContainer}>
-              <Text style={styles.labelText}>{point.name}</Text>
-              <Text style={styles.subText}>
-                {Math.round(point.elevation)} m
-              </Text>
+      {renderPeaks && (
+        <View style={styles.arOverlay} pointerEvents="box-none">
+          {points.map((point, index) => (
+            <View
+              key={index}
+              style={[
+                styles.pointMarker,
+                {
+                  left: point.x,
+                  top: point.y,
+                },
+              ]}
+            >
+              <View style={styles.dot} />
+              <View style={styles.labelContainer}>
+                <Text style={styles.labelText}>{point.name}</Text>
+                <Text style={styles.subText}>
+                  {Math.round(point.elevation)} m
+                </Text>
+              </View>
             </View>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }
@@ -223,5 +276,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "white",
+  },
+  invalidYRotationIndicator: {
+    position: "absolute",
+    height: 1,
+    top: "50%",
+    backgroundColor: "white",
+    opacity: 0.8,
   },
 });
