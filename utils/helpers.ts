@@ -6,16 +6,16 @@ import { MapPoint, RenderablePeak } from "@/models/map";
 export const toRad = (deg: number) => (deg * Math.PI) / 180;
 export const toDeg = (rad: number) => (rad * 180) / Math.PI;
 
+export function mod(x: number, m: number): number {
+  return ((x % m) + m) % m;
+}
+
 export function getBearingDifference(
   location: MapPoint | null,
   heading: number,
   peak: RenderablePeak,
 ): number {
   if (!location) return 0;
-
-  function mod(x: number, m: number): number {
-    return ((x % m) + m) % m;
-  }
 
   const userPoint = point([location.longitude, location.latitude]);
   const peakPoint = point([peak.longitude, peak.latitude]);
