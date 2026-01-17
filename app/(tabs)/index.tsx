@@ -12,15 +12,22 @@ import {
   View,
 } from "react-native";
 
+import { PeakLabel } from "@/components/camera/peak-label";
 import { useNearbyPeaks } from "@/components/nearby-peaks-provider";
 import { CAMERA_VIEW_ANGLE } from "@/constants/config";
 import { useHeading } from "@/hooks/use-heading";
 import { CameraPoint, MapPoint, RenderablePeak } from "@/models/map";
-import { getBearingDifference, mod, toDeg } from "@/utils/helpers";
+import {
+  getBearingDifference,
+  mod,
+  smallestAngleDiff,
+  toDeg,
+} from "@/utils/helpers";
 
 const MIN_Y_ROTATION = 60;
 const MAX_Y_ROTATION = 135;
 const MAX_LINE_SIZE = 0.5;
+const ANGLE_THRESHOLD = 5;
 const halfYRotationDiff = (MAX_Y_ROTATION - MIN_Y_ROTATION) / 2;
 
 const { width, height } = Dimensions.get("window");
@@ -63,14 +70,39 @@ export default function App() {
 
   useEffect(() => {
     if (peaks.length > 0) {
+      const visiblePeaks = peaks.filter((p) => p.isVisible);
+      const sortedPeaks = visiblePeaks.sort(
+        (a, b) => b.elevation - a.elevation,
+      );
       const mappedPoints = mapPeaksToCameraPoints(
         currentLocation,
         heading,
-        peaks,
+        sortedPeaks,
       );
-      setPoints(mappedPoints);
+
+      if (mappedPoints.length === 0) {
+        setPoints([]);
+        return;
+      }
+
+      // Remove overlapping points
+      const points: CameraPoint[] = [mappedPoints[0]];
+      for (let i = 1; i < mappedPoints.length; i++) {
+        let foundOverlap = false;
+        const b1 = mappedPoints[i].bearing;
+        for (let j = 0; j < points.length; j++) {
+          const b2 = points[j].bearing;
+          if (Math.abs(smallestAngleDiff(b1, b2)) < ANGLE_THRESHOLD) {
+            foundOverlap = true;
+            break;
+          }
+        }
+        if (!foundOverlap) points.push(mappedPoints[i]);
+      }
+
+      setPoints(points);
     }
-  }, [heading, peaks]);
+  }, [heading, peaks, currentLocation]);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -108,7 +140,7 @@ export default function App() {
           ((peak.bearing + CAMERA_VIEW_ANGLE / 2) / CAMERA_VIEW_ANGLE) * height;
         return {
           ...peak,
-          x: width / 2 + (index % 2 === 0 ? -30 : 30),
+          x: width - 160,
           y: x,
         };
       });
@@ -176,24 +208,12 @@ export default function App() {
       {renderPeaks && (
         <View style={styles.arOverlay} pointerEvents="box-none">
           {points.map((point, index) => (
-            <View
+            <PeakLabel
               key={index}
-              style={[
-                styles.pointMarker,
-                {
-                  left: point.x,
-                  top: point.y,
-                },
-              ]}
-            >
-              <View style={styles.dot} />
-              <View style={styles.labelContainer}>
-                <Text style={styles.labelText}>{point.name}</Text>
-                <Text style={styles.subText}>
-                  {Math.round(point.elevation)} m
-                </Text>
-              </View>
-            </View>
+              name={point.name}
+              elevation={point.elevation}
+              position={{ x: point.x, y: point.y }}
+            />
           ))}
         </View>
       )}
@@ -235,38 +255,6 @@ const styles = StyleSheet.create({
   arOverlay: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 1,
-  },
-  pointMarker: {
-    position: "absolute",
-    alignItems: "center",
-    width: 100,
-    marginLeft: -50,
-    transform: [{ rotate: "90deg" }],
-  },
-  dot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#ff3b30",
-    borderWidth: 2,
-    borderColor: "white",
-    marginBottom: 4,
-  },
-  labelContainer: {
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignItems: "center",
-  },
-  labelText: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-  subText: {
-    color: "#ddd",
-    fontSize: 10,
   },
   button: {
     flex: 1,
