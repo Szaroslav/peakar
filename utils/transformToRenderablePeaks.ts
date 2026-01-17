@@ -1,5 +1,5 @@
 import { distance } from "@turf/distance";
-import { lineString } from "@turf/helpers";
+import { earthRadius, lineString } from "@turf/helpers";
 import { lineChunk } from "@turf/line-chunk";
 
 import { LatLng, MapPoint, Peak, RenderablePeak } from "@/models/map";
@@ -45,7 +45,7 @@ function isPeakVisible(
   const a = relativePeakElevation / distanceToPeak;
   const b = center.elevation + observerHeight;
 
-  const f = (x: number) => a * x + b;
+  const f = (d: number) => a * d + b - d ** 2 / (2 * earthRadius);
 
   for (let i = 0; i < intermediatePoints.length; i++) {
     const { elevation } = intermediatePoints[i];
