@@ -44,6 +44,7 @@ export default function App() {
 
   useEffect(() => {
     const subscription = DeviceMotion.addListener(({ rotation }) => {
+      if (!rotation) return;
       const y = toDeg(Math.PI + rotation.gamma);
       if (Math.abs(y - rotY.current) > 0.05) {
         rotY.current = y;
