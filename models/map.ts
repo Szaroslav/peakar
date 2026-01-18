@@ -15,6 +15,7 @@ export interface RenderablePeak extends Peak {
 export interface CameraPoint extends RenderablePeak {
   x: number;
   y: number;
+  bearing: number;
 }
 
 export interface ElevationResponse {
