@@ -27,9 +27,5 @@ export function getBearingDifference(
   const bearing = (rawBearing + 360) % 360;
   const smallestDiff = smallestAngleDiff(heading, bearing);
 
-  console.log(
-    `Raw bearing to peak ${peak.name}: ${bearing} diff: ${smallestDiff}`,
-  );
-
   return smallestDiff;
 }
